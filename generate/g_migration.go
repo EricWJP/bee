@@ -45,7 +45,8 @@ func (m mysqlDriver) GenerateCreateUp(tableName string) string {
 }
 
 func (m mysqlDriver) GenerateCreateDown(tableName string) string {
-	downsql := `m.SQL("DROP TABLE ` + "`" + tableName + "`" + `")`
+	downsql := `m.SQL("DROP TABLE ` + "`" + tableName + "`" + `");` +
+		`m.SQL("delete from migrations where name = \"{{StructName}}\"")`
 	return downsql
 }
 
@@ -59,7 +60,7 @@ func (m mysqlDriver) generateSQLFromFields(fields string) string {
 			return ""
 		}
 		typ, tag := m.getSQLType(kv[1])
-		if typ == "" {
+		if typ == "" && tag == "" {
 			beeLogger.Log.Error("Fields format is wrong. Should be: key:type,key:type " + v)
 			return ""
 		}
@@ -89,7 +90,19 @@ func (m mysqlDriver) getSQLType(ktype string) (tp, tag string) {
 	case "auto":
 		return "int(11) NOT NULL AUTO_INCREMENT", ""
 	case "pk":
-		return "int(11) NOT NULL", "PRIMARY KEY (%s)"
+		if len(kv) == 2 && kv[1] == "auto" {
+			return "int(11) NOT NULL AUTO_INCREMENT", "PRIMARY KEY (%s)"
+		} else {
+			return "int(11) NOT NULL", "PRIMARY KEY (%s)"
+		}
+	case "fk":
+		if len(kv) == 2 {
+			return "int(11)", " FOREIGN KEY (%s) REFERENCES " + kv[1]
+		} else {
+			beeLogger.Log.Error("Fields format is wrong. Should be: key:pk:tables(field) ")
+			return "", ""
+		}
+
 	case "datetime":
 		return "datetime NOT NULL", ""
 	case "int", "int8", "int16", "int32", "int64":

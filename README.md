@@ -1,6 +1,19 @@
 
-bee
-===
+## 新增
+
+bee 不指名主键 默认支持 id 自增
+
+####添加支持       
+    1、主键自增 auto      
+    2、外键      
+    3、扩展支持 bee generate model_migration       
+bee generate scaffold model_name -fields="id:pk:auto,user_id:fk:users(id)"    
+bee generate migration table_name -fields="id:pk:auto,user_id:fk:users(id)"       
+bee generate model table_name -fields="id:pk:auto,user_id:fk:users(id)"         
+
+
+================================
+
 
 Bee is a command-line tool facilitating development of Beego-based application.
 

@@ -71,6 +71,7 @@ func init() {
 	CmdGenerate.Flag.Var(&generate.SQLConn, "conn", "Connection string used by the SQLDriver to connect to a database instance.")
 	CmdGenerate.Flag.Var(&generate.Level, "level", "Either 1, 2 or 3. i.e. 1=models; 2=models and controllers; 3=models, controllers and routers.")
 	CmdGenerate.Flag.Var(&generate.Fields, "fields", "List of table Fields.")
+	//CmdGenerate.Flag.Var(&generate.Index, "index", "List of table Index.")
 	CmdGenerate.Flag.Var(&generate.DDL, "ddl", "Generate DDL Migration")
 	commands.AvailableCommands = append(commands.AvailableCommands, CmdGenerate)
 }
@@ -106,6 +107,8 @@ func GenerateCode(cmd *commands.Command, args []string) int {
 		model(cmd, args, currpath)
 	case "view":
 		view(args, currpath)
+	case "model_migration":
+		model_migration(cmd, args, currpath)
 	default:
 		beeLogger.Log.Fatal("Command is missing")
 	}
@@ -176,6 +179,12 @@ func migration(cmd *commands.Command, args []string, currpath string) {
 
 	beeLogger.Log.Infof("Using '%s' as migration name", mname)
 
+	if generate.SQLDriver == "" {
+		generate.SQLDriver = utils.DocValue(config.Conf.Database.Driver)
+		if generate.SQLDriver == "" {
+			generate.SQLDriver = "mysql"
+		}
+	}
 	upsql := ""
 	downsql := ""
 	if generate.Fields != "" {
@@ -215,4 +224,9 @@ func view(args []string, currpath string) {
 	} else {
 		beeLogger.Log.Fatal("Wrong number of arguments. Run: bee help generate")
 	}
+}
+
+func model_migration(cmd *commands.Command, args []string, currpath string) {
+	model(cmd, args, currpath)
+	migration(cmd, args, currpath)
 }

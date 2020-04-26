@@ -88,7 +88,7 @@ func getStruct(structname, fields string) (string, bool, error) {
 		}
 
 		typ, tag, hastimeinner := getType(kv[1])
-		if typ == "" {
+		if typ == "" && tag == "" {
 			return "", false, errors.New("the fields format is wrong. Should be key:type,key:type " + v)
 		}
 
@@ -120,7 +120,17 @@ func getType(ktype string) (kt, tag string, hasTime bool) {
 	case "auto":
 		return "int64", "`orm:\"auto\"`", false
 	case "pk":
+		//if len(kv) == 2 && kv[1] == "auto" {
+		//  return "int64", "`orm:\"auto\"`", false
+		//} else {
 		return "int64", "`orm:\"pk\"`", false
+		//}
+	case "fk":
+		if len(kv) == 2 {
+			return "int64", "", false
+		} else {
+			beeLogger.Log.Error("Fields format is wrong. Should be: key:pk:tables(field) ")
+		}
 	case "datetime":
 		return "time.Time", "`orm:\"type(datetime)\"`", true
 	case "int", "int8", "int16", "int32", "int64":
